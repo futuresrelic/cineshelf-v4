@@ -1,3 +1,144 @@
+// Global Database Integration for CineShelf v4
+class CineShelfGlobal {
+    constructor() {
+        this.apiUrl = './php/global-db.php';
+        this.userId = localStorage.getItem('cineshelf_user_id');
+        this.isOnline = navigator.onLine;
+        
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            this.syncPendingChanges();
+        });
+        
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+        });
+    }
+    
+    async initUser() {
+        if (!this.userId) {
+            try {
+                const response = await fetch(`${this.apiUrl}/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        display_name: 'Movie Collector'
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.user_id) {
+                    this.userId = result.user_id;
+                    localStorage.setItem('cineshelf_user_id', this.userId);
+                }
+                return result;
+            } catch (error) {
+                console.log('Global DB unavailable, using local storage');
+                return null;
+            }
+        }
+        return { user_id: this.userId };
+    }
+    
+    async addMovie(movieData) {
+        // Always save locally first
+        const localMovies = JSON.parse(localStorage.getItem('movies') || '[]');
+        localMovies.push({ ...movieData, localId: Date.now() });
+        localStorage.setItem('movies', JSON.stringify(localMovies));
+        
+        // Try to sync to global database
+        if (this.isOnline && this.userId) {
+            try {
+                const response = await fetch(`${this.apiUrl}/movies`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': this.userId
+                    },
+                    body: JSON.stringify(movieData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // Mark as synced
+                    movieData.globalId = result.global_movie_id;
+                    movieData.synced = true;
+                    localStorage.setItem('movies', JSON.stringify(localMovies));
+                }
+                
+                return result;
+            } catch (error) {
+                // Store for later sync
+                this.storePendingChange('add', movieData);
+                return { success: true, message: 'Saved locally, will sync when online' };
+            }
+        }
+        
+        return { success: true, message: 'Saved locally' };
+    }
+    
+    async discoverMovies(filters = {}) {
+        if (!this.isOnline || !this.userId) {
+            return { error: 'Discovery requires online connection' };
+        }
+        
+        try {
+            const params = new URLSearchParams(filters);
+            const response = await fetch(`${this.apiUrl}/discover?${params}`, {
+                headers: { 'X-User-ID': this.userId }
+            });
+            
+            return await response.json();
+        } catch (error) {
+            return { error: 'Failed to discover movies' };
+        }
+    }
+    
+    async getPopularMovies(limit = 20) {
+        if (!this.isOnline) {
+            return [];
+        }
+        
+        try {
+            const response = await fetch(`${this.apiUrl}/popular?limit=${limit}`);
+            return await response.json();
+        } catch (error) {
+            return [];
+        }
+    }
+    
+    storePendingChange(action, data) {
+        const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+        pending.push({ action, data, timestamp: Date.now() });
+        localStorage.setItem('pending_sync', JSON.stringify(pending));
+    }
+    
+    async syncPendingChanges() {
+        const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+        const synced = [];
+        
+        for (const change of pending) {
+            try {
+                if (change.action === 'add') {
+                    await this.addMovie(change.data);
+                    synced.push(change);
+                }
+            } catch (error) {
+                console.log('Failed to sync change:', error);
+            }
+        }
+        
+        // Remove synced changes
+        const remaining = pending.filter(change => !synced.includes(change));
+        localStorage.setItem('pending_sync', JSON.stringify(remaining));
+    }
+}
+
+// Initialize global database integration
+const globalDB = new CineShelfGlobal();
+globalDB.initUser();
+
 // CineShelf App - Main JavaScript File
 // Global App object to contain all functions
 window.App = (function() {
