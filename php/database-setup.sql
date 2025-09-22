@@ -1,4 +1,4 @@
--- CineShelf Global Database Schema
+-- CineShelf Global Database Schema - DreamHost Compatible
 CREATE DATABASE IF NOT EXISTS cineshelf_global;
 USE cineshelf_global;
 
@@ -109,7 +109,7 @@ CREATE TABLE user_relationships (
     INDEX idx_user_friends (user_id, status)
 );
 
--- Movie Format Popularity Tracking
+-- Movie Format Popularity View (No triggers needed)
 CREATE VIEW movie_popularity AS
 SELECT 
     gm.id,
@@ -117,38 +117,15 @@ SELECT
     gm.year,
     COUNT(uc.id) as owner_count,
     GROUP_CONCAT(DISTINCT uc.format) as available_formats,
-    AVG(uc.condition_rating) as avg_condition,
+    AVG(CASE 
+        WHEN uc.condition_rating = 'Poor' THEN 1
+        WHEN uc.condition_rating = 'Fair' THEN 2
+        WHEN uc.condition_rating = 'Good' THEN 3
+        WHEN uc.condition_rating = 'Very Good' THEN 4
+        WHEN uc.condition_rating = 'Mint' THEN 5
+    END) as avg_condition,
     COUNT(CASE WHEN uc.is_lendable = TRUE THEN 1 END) as lendable_copies
 FROM global_movies gm
 LEFT JOIN user_collections uc ON gm.id = uc.global_movie_id
 GROUP BY gm.id, gm.title, gm.year
 ORDER BY owner_count DESC;
-
--- Update triggers for maintaining counts
-DELIMITER $$
-CREATE TRIGGER update_movie_popularity 
-AFTER INSERT ON user_collections
-FOR EACH ROW
-BEGIN
-    UPDATE global_movies 
-    SET total_owners = (SELECT COUNT(*) FROM user_collections WHERE global_movie_id = NEW.global_movie_id)
-    WHERE id = NEW.global_movie_id;
-    
-    UPDATE users 
-    SET total_movies = (SELECT COUNT(*) FROM user_collections WHERE user_id = NEW.user_id)
-    WHERE id = NEW.user_id;
-END$$
-
-CREATE TRIGGER update_movie_popularity_delete
-AFTER DELETE ON user_collections
-FOR EACH ROW
-BEGIN
-    UPDATE global_movies 
-    SET total_owners = (SELECT COUNT(*) FROM user_collections WHERE global_movie_id = OLD.global_movie_id)
-    WHERE id = OLD.global_movie_id;
-    
-    UPDATE users 
-    SET total_movies = (SELECT COUNT(*) FROM user_collections WHERE user_id = OLD.user_id)
-    WHERE id = OLD.user_id;
-END$$
-DELIMITER ;
