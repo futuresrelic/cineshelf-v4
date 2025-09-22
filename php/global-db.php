@@ -8,6 +8,25 @@ class CineShelfAPI {
         $this->pdo = $pdo;
     }
     
+    // Manual count updates (replaces triggers)
+    private function updateMovieCounts($globalMovieId) {
+        $stmt = $this->pdo->prepare("
+            UPDATE global_movies 
+            SET total_owners = (SELECT COUNT(DISTINCT user_id) FROM user_collections WHERE global_movie_id = ?)
+            WHERE id = ?
+        ");
+        $stmt->execute([$globalMovieId, $globalMovieId]);
+    }
+    
+    private function updateUserCounts($userId) {
+        $stmt = $this->pdo->prepare("
+            UPDATE users 
+            SET total_movies = (SELECT COUNT(*) FROM user_collections WHERE user_id = ?)
+            WHERE id = ?
+        ");
+        $stmt->execute([$userId, $userId]);
+    }
+    
     // Initialize or get user
     public function initUser($userData = null) {
         $userId = $_SERVER['HTTP_X_USER_ID'] ?? null;
@@ -28,9 +47,10 @@ class CineShelfAPI {
             $stmt->execute([$userId, $displayName]);
             
             logActivity($this->pdo, $userId, 'user_created');
+            $user = ['id' => $userId, 'display_name' => $displayName];
         }
         
-        return ['user_id' => $userId, 'user' => $user ?: ['id' => $userId, 'display_name' => $displayName]];
+        return ['user_id' => $userId, 'user' => $user];
     }
     
     // Add movie to global database and user collection
@@ -59,8 +79,12 @@ class CineShelfAPI {
                 $movieData['format'] ?? 'DVD',
                 $movieData['condition'] ?? 'Good',
                 $movieData['notes'] ?? '',
-                $movieData['lendable'] ?? false
+                ($movieData['lendable'] ?? false) ? 1 : 0
             ]);
+            
+            // Manual count updates (replaces triggers)
+            $this->updateMovieCounts($globalMovieId);
+            $this->updateUserCounts($userId);
             
             $this->pdo->commit();
             logActivity($this->pdo, $userId, 'movie_added', ['movie_id' => $globalMovieId]);
@@ -75,8 +99,16 @@ class CineShelfAPI {
     
     private function findOrCreateGlobalMovie($movieData) {
         // Try to find existing movie
-        $stmt = $this->pdo->prepare("SELECT id FROM global_movies WHERE imdb_id = ? OR (title = ? AND year = ?)");
-        $stmt->execute([$movieData['imdbID'] ?? null, $movieData['Title'], $movieData['Year'] ?? null]);
+        $stmt = $this->pdo->prepare("
+            SELECT id FROM global_movies 
+            WHERE (imdb_id IS NOT NULL AND imdb_id = ?) 
+               OR (title = ? AND year = ?)
+        ");
+        $stmt->execute([
+            $movieData['imdbID'] ?? null, 
+            $movieData['Title'], 
+            $movieData['Year'] ?? null
+        ]);
         $existing = $stmt->fetch();
         
         if ($existing) {
@@ -94,10 +126,10 @@ class CineShelfAPI {
             $movieData['imdbID'] ?? null,
             $movieData['tmdbID'] ?? null,
             $movieData['Title'],
-            $movieData['Year'] ?? null,
+            $movieData['Year'] ? intval($movieData['Year']) : null,
             $movieData['Director'] ?? null,
             $movieData['Genre'] ?? null,
-            $movieData['Runtime'] ? intval($movieData['Runtime']) : null,
+            $movieData['Runtime'] ? intval(str_replace(' min', '', $movieData['Runtime'])) : null,
             $movieData['imdbRating'] ? floatval($movieData['imdbRating']) : null,
             $movieData['Poster'] ?? null,
             $movieData['Plot'] ?? null
@@ -131,8 +163,8 @@ class CineShelfAPI {
     // Discover movies owned by others
     public function discoverMovies($userId, $search = '', $format = '', $genre = '', $page = 1, $limit = 20) {
         $offset = ($page - 1) * $limit;
-        $conditions = ['u.privacy_level != ?'];
-        $params = ['private'];
+        $conditions = ["u.privacy_level != 'private'"];
+        $params = [];
         
         if ($search) {
             $conditions[] = 'gm.title LIKE ?';
@@ -160,7 +192,7 @@ class CineShelfAPI {
             JOIN global_movies gm ON uc.global_movie_id = gm.id
             JOIN users u ON uc.user_id = u.id
             WHERE $whereClause AND uc.user_id != ? AND u.show_collection = TRUE
-            ORDER BY gm.popularity_score DESC, gm.total_owners DESC
+            ORDER BY gm.total_owners DESC, gm.rating DESC
             LIMIT ? OFFSET ?
         ");
         
@@ -219,8 +251,10 @@ class CineShelfAPI {
         
         // Get user context
         $userId = $_SERVER['HTTP_X_USER_ID'] ?? null;
-        if (!$userId && $method !== 'POST' || $pathParts[0] !== 'init') {
-            return ['error' => 'User ID required'];
+        if (!$userId && $method !== 'POST' || ($pathParts[0] !== 'init' && $method === 'POST')) {
+            if ($pathParts[0] !== 'init') {
+                return ['error' => 'User ID required'];
+            }
         }
         
         switch ($method) {
@@ -263,6 +297,14 @@ class CineShelfAPI {
             default:
                 return ['error' => 'Endpoint not found'];
         }
+    }
+    
+    private function handlePut($pathParts, $userId) {
+        return ['error' => 'PUT not implemented yet'];
+    }
+    
+    private function handleDelete($pathParts, $userId) {
+        return ['error' => 'DELETE not implemented yet'];
     }
 }
 
