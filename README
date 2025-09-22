@@ -1,0 +1,132 @@
+# 📱 iPhone/iOS Setup Guide for CineShelf
+
+## 🔒 **CRITICAL: HTTPS Requirement**
+iPhone Safari **REQUIRES HTTPS** for camera access. This is non-negotiable.
+
+### Quick HTTPS Solutions:
+1. **Local Development**: Use `https://localhost` or enable HTTPS in your dev server
+2. **Production**: Enable SSL/TLS on your web server
+3. **Free Options**: Cloudflare, Let's Encrypt, or GitHub Pages
+
+---
+
+## 📷 **Camera Permission Setup**
+
+### First-Time Setup:
+1. Open **Safari** on iPhone (not Chrome/Firefox)
+2. Navigate to your CineShelf app
+3. When prompted for camera access, tap **"Allow"**
+4. If you accidentally denied it, follow the reset steps below
+
+### Reset Camera Permissions:
+1. **Settings** → **Safari** → **Camera**
+2. Set to **"Ask"** or **"Allow"**
+3. **Settings** → **Privacy & Security** → **Camera**
+4. Find **Safari** and enable it
+5. Close Safari completely and reopen
+
+---
+
+## 🐛 **Common iPhone Issues & Solutions**
+
+### "Camera access requires HTTPS" Error:
+- **Solution**: Your server needs HTTPS. Use `https://` instead of `http://`
+
+### "Camera permission denied" Error:
+- **Solution**: Reset Safari camera permissions (see steps above)
+
+### "Camera not supported" Error:  
+- **Solution**: Use Safari browser, not Chrome or others on iOS
+
+### Camera shows black screen:
+- **Solution**: Close other camera apps, restart Safari
+
+### Barcode scanner not detecting:
+- **Solution**: Ensure good lighting, try different angles, clean camera lens
+
+---
+
+## 🎯 **Optimization Tips**
+
+### For Best Performance:
+1. **Close other apps** using camera
+2. **Good lighting** is essential for scanning
+3. **Hold steady** when scanning barcodes
+4. **Clean camera lens** regularly
+5. **Use latest Safari** version
+
+### Battery Optimization:
+- The camera features use more battery
+- Consider using "Low Power Mode" if needed
+- Close camera when not scanning
+
+---
+
+## 🔧 **Developer Notes**
+
+### Camera Constraints Used:
+```javascript
+{
+  video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1280, max: 1920 },
+    height: { ideal: 720, max: 1080 },
+    frameRate: { ideal: 30, max: 60 }
+  }
+}
+```
+
+### iOS-Specific Features:
+- ✅ HTTPS requirement detection
+- ✅ iOS-compatible audio feedback  
+- ✅ Enhanced error messages
+- ✅ Proper stream cleanup
+- ✅ Fallback clipboard access
+- ✅ iOS Safari optimization
+
+---
+
+## 📋 **Testing Checklist**
+
+### Before Deployment:
+- [ ] HTTPS enabled on server
+- [ ] Test on actual iPhone (not simulator)
+- [ ] Test both UPC scanner and cover scanner
+- [ ] Verify camera permissions work
+- [ ] Check error messages are helpful
+- [ ] Test with different lighting conditions
+
+### iPhone Models Tested:
+- iPhone 12 Pro and newer (recommended)
+- iPhone X and newer (should work)
+- Older iPhones may have reduced performance
+
+---
+
+## 🆘 **Still Having Issues?**
+
+1. **Check the browser console** for detailed error messages
+2. **Try a different iPhone** to isolate device issues  
+3. **Verify HTTPS** is working properly
+4. **Test on desktop first** to ensure app works
+5. **Contact your web host** about enabling HTTPS
+
+### Error Reporting:
+If you see any errors, note:
+- iPhone model and iOS version
+- Safari version  
+- Exact error message
+- Whether you're using HTTP or HTTPS
+
+---
+
+## ✅ **Success Indicators**
+
+When everything is working correctly, you should see:
+- ✅ "Camera ready" message appears
+- ✅ Live camera feed shows in viewport
+- ✅ Barcode scanner has green targeting rectangle
+- ✅ Cover scanner captures images successfully
+- ✅ Success beep/vibration when scanning
+
+**Remember**: iPhone Safari is very strict about camera permissions and HTTPS. Follow this guide exactly for best results!

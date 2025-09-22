@@ -1,0 +1,102 @@
+{
+    "user": "mya",
+    "copies": [
+        {
+            "id": "copy_1758474175017_a7gwpf0b3",
+            "title": "The Illusionist",
+            "format": "DVD",
+            "region": "Region 1",
+            "discs": 1,
+            "edition": "Widescreen",
+            "languages": "",
+            "notes": "",
+            "upc": "",
+            "isWishlist": false,
+            "movieId": "1491",
+            "resolved": true,
+            "created": "2025-09-21T17:02:55.017Z"
+        },
+        {
+            "id": "copy_1758474326720_z0jowkkmh",
+            "title": "The Sword in the Stone",
+            "format": "DVD",
+            "region": "Region 1",
+            "discs": 1,
+            "edition": "45th Anniversary",
+            "languages": "",
+            "notes": "",
+            "upc": "",
+            "isWishlist": false,
+            "movieId": "9078",
+            "resolved": true,
+            "created": "2025-09-21T17:05:26.721Z"
+        },
+        {
+            "id": "copy_1758474520582_tljli4ocm",
+            "title": "How the Grinch Stole Christmas!",
+            "format": "DVD",
+            "region": "Region 1",
+            "discs": 1,
+            "edition": "",
+            "languages": "",
+            "notes": "",
+            "upc": "",
+            "isWishlist": false,
+            "movieId": "13377",
+            "resolved": true,
+            "created": "2025-09-21T17:08:40.583Z"
+        }
+    ],
+    "movies": [
+        {
+            "imdbID": "1491",
+            "title": "The Illusionist",
+            "year": 2006,
+            "posterIMG": "https:\/\/image.tmdb.org\/t\/p\/w500\/1O9jUvqkHaGBMVRyOJz1AlkmALW.jpg",
+            "imdbRating": 7.298,
+            "plot": "With his eye on a lovely aristocrat, a gifted illusionist named Eisenheim uses his powers to win her away from her betrothed, a crown prince. But Eisenheim's scheme creates tumult within the monarchy and ignites the suspicion of a dogged inspector.",
+            "director": "Neil Burger",
+            "genre": "Fantasy, Drama, Thriller, Romance",
+            "runtime": "110 min",
+            "rated": "Unknown"
+        },
+        {
+            "imdbID": "9078",
+            "title": "The Sword in the Stone",
+            "year": 1963,
+            "posterIMG": "https:\/\/image.tmdb.org\/t\/p\/w500\/7lyeeuhGAJSNXYEW34S8mJ1bwI8.jpg",
+            "imdbRating": 7.228,
+            "plot": "Wart is a young boy who aspires to be a knight's squire. On a hunting trip he falls in on Merlin, a powerful but amnesiac wizard who has plans for him beyond mere squiredom. He starts by trying to give him an education, believing that once one has an education, one can go anywhere. Needless to say, it doesn't quite work out that way.",
+            "director": "Wolfgang Reitherman",
+            "genre": "Animation, Family, Fantasy",
+            "runtime": "79 min",
+            "rated": "Unknown"
+        },
+        {
+            "imdbID": "13377",
+            "title": "How the Grinch Stole Christmas!",
+            "year": 1966,
+            "posterIMG": "https:\/\/image.tmdb.org\/t\/p\/w500\/7ir0iRuPK9OEuH569cp0nF5CJce.jpg",
+            "imdbRating": 7.5,
+            "plot": "Bitter and hateful, the Grinch is irritated at the thought of a nearby village having a happy time celebrating Christmas. Disguised as Santa Claus, with his dog made to look like a reindeer, he decides to raid the village to steal all the Christmas things.",
+            "director": "Chuck Jones",
+            "genre": "Animation, Family, Comedy",
+            "runtime": "25 min",
+            "rated": "Unknown"
+        }
+    ],
+    "customEditions": [
+        "45th Anniversary"
+    ],
+    "timestamp": "2025-09-21T17:13:11.886Z",
+    "userAgent": "Mozilla\/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit\/605.1.15 (KHTML, like Gecko) GSA\/386.2.807931246 Mobile\/15E148 Safari\/604.1",
+    "deviceInfo": {
+        "platform": "iPhone",
+        "language": "en-CA",
+        "cookieEnabled": true
+    },
+    "backupLabel": "Backup for mya",
+    "backupTime": "2025-09-21 10:13:12",
+    "serverVersion": "2.1",
+    "filename_created": "cineshelf_backup_mya.json"
+}

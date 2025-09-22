@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineShelf - Physical Media Collection Manager</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json?v=2">
+    
+    <!-- iOS and PWA meta tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CineShelf">
+    
+    <!-- Icon for iOS -->
+    <link rel="apple-touch-icon" href="icon-180.png">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+</head>
+<body>
+    <div class="sticky-header-container">
+        <div class="header">
+            <h1>
+                <img src="logo.png" alt="CineShelf Logo" class="header-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span style="display: none;">🎬</span>
+                CineShelf
+            </h1>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">Physical Media Collection Manager</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('scan')">Scan</button>
+            <button class="tab admin-feature" onclick="switchTab('covers')">Covers</button>
+            <button class="tab" onclick="switchTab('collection')">Movies</button>
+            <button class="tab" onclick="switchTab('wishlist')">Wishlist</button>
+            <button class="tab admin-only" onclick="switchTab('resolve')">Resolve</button>
+            <button class="tab admin-only" onclick="switchTab('data')">Data</button>
+            <button class="tab admin-only" onclick="switchTab('settings')">Settings</button>
+        </div>
+    </div>
+
+    <!-- User Switcher - Always Visible at Top -->
+    <div class="detail-section" style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin: 1rem; margin-bottom: 0;">
+        <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
+            <label for="currentUser" style="color: white; margin: 0;">👤 Current User:</label>
+            <select id="currentUser" onchange="App.switchUser(this.value)" style="flex: 1; max-width: 200px;" autocomplete="username">
+                <option value="default">Default User</option>
+                <option value="admin">Admin</option>
+                <option value="klindakoil">klindakoil</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Scan Tab -->
+    <div id="scan" class="tab-content active">
+        <div id="status" class="status"></div>
+        
+        <div id="resolveNextSection" class="resolve-next-section admin-only" style="display: none;">
+            <div class="resolve-next-title">🔍 Resolving Unmatched Item</div>
+            <div id="resolveNextInfo" class="resolve-next-info"></div>
+            <div class="resolve-next-actions">
+                <button onclick="App.skipToNextUnresolved()" class="btn btn-secondary">⏭️ Skip This Item</button>
+                <button onclick="App.deleteCurrentResolveItem()" class="btn btn-danger">🗑️ Delete This Item</button>
+            </div>
+        </div>
+
+        <div id="editSection" class="edit-section" style="display: none;">
+            <div class="edit-section-title">✏️ Editing Movie</div>
+            <div id="editInfo" class="edit-section-info"></div>
+            <div class="edit-section-actions">
+                <button onclick="App.cancelEdit()" class="btn btn-secondary">❌ Cancel Edit</button>
+                <button onclick="App.saveEditChanges()" class="btn">💾 Save Changes</button>
+            </div>
+        </div>
+
+        <form id="movieForm">
+            <div class="form-group">
+                <label for="movieTitle">Movie Title:</label>
+                <input type="text" id="movieTitle" name="movieTitle" required autocomplete="off">
+            </div>
+            
+            <div class="form-row">
+                <button type="button" id="searchBtn" class="btn btn-secondary">
+                    <span id="searchBtnText">🔍 Search Movie Database</span>
+                    <div id="searchLoader" class="spinner" style="display: none;"></div>
+                </button>
+                
+                <div class="imdb-lookup">
+                    <input type="text" id="imdbId" name="imdbId" placeholder="IMDB ID (e.g., tt0219965)" autocomplete="off">
+                    <button type="button" id="imdbBtn" class="btn btn-secondary">📋 Lookup by IMDB ID</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="format">Format:</label>
+                    <select id="format" name="format" autocomplete="off">
+                        <option value="">Select Format</option>
+                        <option value="DVD">DVD</option>
+                        <option value="Blu-ray">Blu-ray</option>
+                        <option value="4K UHD">4K UHD</option>
+                        <option value="VHS">VHS</option>
+                        <option value="Digital">Digital</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="region">Region:</label>
+                    <select id="region" name="region" autocomplete="country">
+                        <option value="">Any Region</option>
+                        <option value="Region A">Region A</option>
+                        <option value="Region B">Region B</option>
+                        <option value="Region C">Region C</option>
+                        <option value="Region 1">Region 1</option>
+                        <option value="Region 2">Region 2</option>
+                        <option value="Region 3">Region 3</option>
+                        <option value="Region 4">Region 4</option>
+                        <option value="Region Free">Region Free</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="discs">Number of Discs:</label>
+                    <input type="number" id="discs" name="discs" min="1" max="50" value="1" autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edition">Edition:</label>
+                    <select id="edition" name="edition" autocomplete="off">
+                        <option value="">Select Edition (Optional)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="languages">Audio Languages:</label>
+                <input type="text" id="languages" name="languages" placeholder="e.g., English, French, Spanish" autocomplete="language">
+            </div>
+
+            <div class="form-group">
+                <label for="upc">UPC/Barcode:</label>
+                <input type="text" id="upc" name="upc" placeholder="Barcode number" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes:</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="Additional notes about this copy" autocomplete="off"></textarea>
+            </div>
+
+            <div id="formButtons" class="form-buttons">
+                <button type="submit" name="collection" class="btn">📚 Add to Collection</button>
+                <button type="submit" name="wishlist" class="btn btn-secondary">❤️ Add to Wishlist</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Covers Tab -->
+    <div id="covers" class="tab-content admin-feature">
+        <div id="coverStatus" class="status"></div>
+        
+        <div class="api-key-section">
+            <label for="apiKey">OpenAI API Key:</label>
+            <input type="password" id="apiKey" name="apiKey" placeholder="sk-..." style="margin-bottom: 0.5rem;" autocomplete="current-password">
+            <button class="test-btn" onclick="CoverScanner.testAPI()">🔧 Test API Key</button>
+        </div>
+        
+        <div class="camera-section">
+            <input type="file" id="fileInput" name="fileInput" accept="image/*" multiple style="display: none;">
+            <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">📁 Upload Images</button>
+            
+            <div class="camera-controls">
+                <button onclick="CoverScanner.startCamera()">📷 Start Camera</button>
+                <button onclick="CoverScanner.captureImage()" id="captureBtn" disabled>📸 Capture</button>
+                <button onclick="CoverScanner.stopCamera()">⏹️ Stop</button>
+                <button onclick="CoverScanner.clearImages()" id="clearBtn" class="clear-btn" disabled>🗑️ Clear</button>
+            </div>
+            
+            <video id="coverVideo" autoplay></video>
+            <canvas id="coverCanvas"></canvas>
+            
+            <div id="capturedImages" class="captured-images-container"></div>
+            
+            <button onclick="CoverScanner.analyzeImages()" id="analyzeBtn" class="btn" disabled>🤖 Extract Titles with AI</button>
+        </div>
+        
+        <div id="coverLoading" class="loading" style="display: none;">
+            Analyzing DVD covers with AI... Please wait.
+        </div>
+        
+        <div class="titles-section">
+            <h3 style="color: white; margin-bottom: 1rem;">Extracted Movie Titles:</h3>
+            <div id="titlesContainer"></div>
+            
+            <div class="action-buttons">
+                <button onclick="CoverScanner.addNewTitle()" class="btn btn-secondary">➕ Add Manual Title</button>
+                <button onclick="CoverScanner.showList()" class="btn">📄 Show List</button>
+            </div>
+            
+            <textarea id="outputArea" placeholder="Movie titles will appear here..."></textarea>
+            
+            <div style="text-align: center; margin-top: 0.5rem;">
+                <button onclick="CoverScanner.copyText()" class="btn btn-secondary">📋 Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection Tab -->
+    <div id="collection" class="tab-content">
+        <div class="view-controls">
+            <div class="sort-controls" style="flex: 1; margin-bottom: 0;">
+                <div class="form-group">
+                    <label for="collectionSort">Sort by:</label>
+                    <select id="collectionSort" onchange="App.sortMovies('collection', this.value)" autocomplete="off">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="year">Year (Oldest First)</option>
+                        <option value="year-desc">Year (Newest First)</option>
+                        <option value="rating">Rating (Lowest First)</option>
+                        <option value="rating-desc">Rating (Highest First)</option>
+                        <option value="runtime" class="admin-feature">Runtime (Shortest First)</option>
+                        <option value="runtime-desc" class="admin-feature">Runtime (Longest First)</option>
+                        <option value="director" class="admin-feature">Director (A-Z)</option>
+                        <option value="director-desc" class="admin-feature">Director (Z-A)</option>
+                        <option value="genre">Genre (A-Z)</option>
+                        <option value="genre-desc">Genre (Z-A)</option>
+                        <option value="format" class="admin-feature">Format (A-Z)</option>
+                        <option value="format-desc" class="admin-feature">Format (Z-A)</option>
+                        <option value="added">Date Added (Oldest First)</option>
+                        <option value="added-desc">Date Added (Newest First)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="App.setViewMode('collection', 'grid')" title="Grid View">⊞</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('collection', 'small')" title="Small Cards">⊡</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('collection', 'detail')" title="Detail Cards">⊟</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('collection', 'list')" title="List View">☰</button>
+            </div>
+        </div>
+        <div id="collectionGrid" class="movie-grid"></div>
+        <div id="collectionEmpty" class="empty-state">
+            <h3>No Movies in Collection</h3>
+            <p>Start by scanning or adding movies to build your collection!</p>
+        </div>
+    </div>
+
+    <!-- Wishlist Tab -->
+    <div id="wishlist" class="tab-content">
+        <div class="view-controls">
+            <div class="sort-controls" style="flex: 1; margin-bottom: 0;">
+                <div class="form-group">
+                    <label for="wishlistSort">Sort by:</label>
+                    <select id="wishlistSort" onchange="App.sortMovies('wishlist', this.value)" autocomplete="off">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="year">Year (Oldest First)</option>
+                        <option value="year-desc">Year (Newest First)</option>
+                        <option value="rating">Rating (Lowest First)</option>
+                        <option value="rating-desc">Rating (Highest First)</option>
+                        <option value="runtime" class="admin-feature">Runtime (Shortest First)</option>
+                        <option value="runtime-desc" class="admin-feature">Runtime (Longest First)</option>
+                        <option value="director" class="admin-feature">Director (A-Z)</option>
+                        <option value="director-desc" class="admin-feature">Director (Z-A)</option>
+                        <option value="genre">Genre (A-Z)</option>
+                        <option value="genre-desc">Genre (Z-A)</option>
+                        <option value="format" class="admin-feature">Format (A-Z)</option>
+                        <option value="format-desc" class="admin-feature">Format (Z-A)</option>
+                        <option value="added">Date Added (Oldest First)</option>
+                        <option value="added-desc">Date Added (Newest First)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="App.setViewMode('wishlist', 'grid')" title="Grid View">⊞</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('wishlist', 'small')" title="Small Cards">⊡</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('wishlist', 'detail')" title="Detail Cards">⊟</button>
+                <button class="view-btn admin-feature" onclick="App.setViewMode('wishlist', 'list')" title="List View">☰</button>
+            </div>
+        </div>
+        <div id="wishlistGrid" class="movie-grid"></div>
+        <div id="wishlistEmpty" class="empty-state">
+            <h3>No Movies in Wishlist</h3>
+            <p>Add movies you want to buy to your wishlist!</p>
+        </div>
+    </div>
+
+    <!-- Resolve Tab (Admin Only) -->
+    <div id="resolve" class="tab-content admin-only">
+        <div id="resolveList"></div>
+        <div id="resolveEmpty" class="empty-state">
+            <h3>All Movies Resolved</h3>
+            <p>All your movies have complete information.</p>
+        </div>
+    </div>
+
+    <!-- Data Management Tab (Admin Only) -->
+    <div id="data" class="tab-content admin-only">
+        <!-- User Management Section -->
+        <div class="detail-section">
+            <div class="detail-title">👥 User Management</div>
+            <div class="form-group">
+                <label for="dataCurrentUser">Current User (Data Tab):</label>
+                <select id="dataCurrentUser" onchange="App.switchUser(this.value)" autocomplete="username">
+                    <option value="default">Default User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="newUserName">Add New User:</label>
+                <input type="text" id="newUserName" name="newUserName" placeholder="New user name" autocomplete="username">
+                <button onclick="App.addUser()" class="btn btn-secondary">Add User</button>
+            </div>
+            <button onclick="App.deleteCurrentUser()" class="btn btn-danger">Delete Current User</button>
+        </div>
+
+        <!-- Admin Management Section -->
+        <div class="detail-section">
+            <div id="adminControls"></div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="detail-section">
+            <div class="detail-title">📊 Collection Statistics</div>
+            <div id="stats"></div>
+        </div>
+
+        <!-- Local Data Management -->
+        <div class="detail-section">
+            <div class="detail-title">💾 Local Data Management</div>
+            <div class="form-group">
+                <button onclick="App.exportData()" class="btn">📥 Export Collection (CSV)</button>
+            </div>
+
+            <div class="form-group">
+                <label for="importFile" class="file-label">📤 Import Collection Data</label>
+                <input type="file" id="importFile" name="importFile" class="file-input" accept=".csv,.json" onchange="App.importData(event)">
+            </div>
+
+            <div class="form-group">
+                <button onclick="App.clearAllData()" class="btn btn-danger">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Server Backup Section -->
+        <div class="detail-section">
+            <div class="detail-title">☁️ Server Backup</div>
+            <div class="form-group">
+                <button onclick="App.backupToServer()" class="btn">📤 Backup to Server</button>
+            </div>
+            <div class="form-group">
+                <button onclick="App.restoreFromServer()" class="btn btn-secondary">📥 Restore from Server</button>
+            </div>
+            <div id="serverStatus" class="status" style="display: none;"></div>
+            <div class="detail-text" style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">
+                Note: Server backup requires server-side script setup. Data is saved as JSON files on your web server.
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Tab (Admin Only) -->
+    <div id="settings" class="tab-content admin-only">
+        <div class="detail-section">
+            <div class="detail-title">⚙️ Application Settings</div>
+            <p class="detail-text">Current Version: <span id="appVersion">v2.1.0</span> • Last Updated: <span id="lastUpdate">Today</span></p>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">🔍 Search & Display Settings</div>
+            
+            <div class="form-group">
+                <label for="searchResultsLimit">Search Results Limit:</label>
+                <select id="searchResultsLimit" onchange="App.updateSetting('searchResultsLimit', this.value)" autocomplete="off">
+                    <option value="5">5 results</option>
+                    <option value="10">10 results</option>
+                    <option value="15">15 results</option>
+                    <option value="20">20 results</option>
+                    <option value="25">25 results</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="defaultViewMode">Default View Mode:</label>
+                <select id="defaultViewMode" onchange="App.updateSetting('defaultViewMode', this.value)" autocomplete="off">
+                    <option value="grid">Grid View</option>
+                    <option value="small">Small Cards</option>
+                    <option value="detail">Detail Cards</option>
+                    <option value="list">List View</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">🎨 Appearance Settings</div>
+
+            <div class="form-group">
+                <label for="appTheme">Theme:</label>
+                <select id="appTheme" onchange="App.updateSetting('appTheme', this.value)" autocomplete="off">
+                    <option value="cosmic">Cosmic (Default)</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="forest">Forest</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="royal">Royal</option>
+                    <option value="minimal">Minimal</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="animationSpeed">Animation Speed:</label>
+                <select id="animationSpeed" onchange="App.updateSetting('animationSpeed', this.value)" autocomplete="off">
+                    <option value="fast">Fast</option>
+                    <option value="normal">Normal</option>
+                    <option value="slow">Slow</option>
+                    <option value="none">No Animations</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cardStyle">Card Style:</label>
+                <select id="cardStyle" onchange="App.updateSetting('cardStyle', this.value)" autocomplete="off">
+                    <option value="rounded">Rounded</option>
+                    <option value="sharp">Sharp Corners</option>
+                    <option value="ultra-round">Ultra Round</option>
+                    <option value="minimal">Minimal</option>
+                </select>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="compactMode" onchange="App.updateSetting('compactMode', this.checked)">
+                <label for="compactMode">Compact Mode</label>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">🔧 Advanced Settings</div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="autoResolve" onchange="App.updateSetting('autoResolve', this.checked)">
+                <label for="autoResolve">Auto-resolve Movies from Shared Database</label>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="barcodeBeep" onchange="App.updateSetting('barcodeBeep', this.checked)">
+                <label for="barcodeBeep">Barcode Scanner Sound</label>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="scannerVibration" onchange="App.updateSetting('scannerVibration', this.checked)">
+                <label for="scannerVibration">Scanner Vibration (Mobile)</label>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="autoBackup" onchange="App.updateSetting('autoBackup', this.checked)">
+                <label for="autoBackup">Auto Server Backup (Experimental)</label>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="debugMode" onchange="App.updateSetting('debugMode', this.checked)">
+                <label for="debugMode">Debug Mode (Console Logging)</label>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">🔑 API Keys</div>
+            
+            <div class="form-group">
+                <label for="openaiApiKey">OpenAI API Key (for Cover Scanner):</label>
+                <input type="password" id="openaiApiKey" name="openaiApiKey" placeholder="sk-..." onchange="App.updateSetting('openaiApiKey', this.value)" autocomplete="current-password">
+            </div>
+
+            <div class="form-group">
+                <label for="tmdbApiKey">TMDB API Key (Custom):</label>
+                <input type="password" id="tmdbApiKey" name="tmdbApiKey" placeholder="Custom TMDB key (optional)" onchange="App.updateSetting('tmdbApiKey', this.value)" autocomplete="current-password">
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">📝 Custom Editions</div>
+            <div class="form-group">
+                <label for="newCustomEdition">Add Custom Edition:</label>
+                <input type="text" id="newCustomEdition" name="newCustomEdition" placeholder="e.g., Director's Cut" autocomplete="off">
+                <button onclick="App.addCustomEditionFromSettings()" class="btn btn-secondary">Add Edition</button>
+            </div>
+            <div id="customEditionsList"></div>
+            <button onclick="App.resetCustomEditions()" class="btn btn-danger">Reset to Defaults</button>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-title">🔄 Reset Settings</div>
+            <button onclick="App.resetSettings()" class="btn btn-danger">Reset All Settings to Defaults</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="searchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Search Results</h3>
+                <span class="close" onclick="App.closeModal('searchModal')">&times;</span>
+            </div>
+            <div id="searchResults"></div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button onclick="App.useWithoutData()" class="btn btn-secondary">Use Title Without Database Info</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="App.closeModal('detailModal')">&times;</span>
+            </div>
+            <div id="movieDetail"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/cover-scanner.js"></script>
+    <script src="js/service-worker.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            App.init();
+            
+            // Initialize cover scanner if available
+            if (typeof CoverScanner !== 'undefined') {
+                CoverScanner.init();
+            }
+        });
+    </script>
+</body>
+</html>

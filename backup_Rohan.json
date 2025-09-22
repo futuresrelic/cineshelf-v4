@@ -1,0 +1,22 @@
+{
+    "user": "Rohan",
+    "copies": [
+        {
+            "id": "1756999633720",
+            "title": "Twelve monkeys",
+            "format": "DVD",
+            "region": "",
+            "discs": 1,
+            "edition": "",
+            "languages": "",
+            "notes": "",
+            "upc": "",
+            "isWishlist": false,
+            "movieId": null,
+            "resolved": false,
+            "created": "2025-09-04T15:27:13.720Z"
+        }
+    ],
+    "movies": [],
+    "timestamp": "2025-09-04T15:27:31.666Z"
+}

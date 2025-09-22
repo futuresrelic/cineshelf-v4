@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineShelf Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .admin-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin: 0.25rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #d4edda;
+        }
+
+        .status-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #f8d7da;
+        }
+
+        .status-info {
+            background: rgba(23, 162, 184, 0.2);
+            border: 1px solid rgba(23, 162, 184, 0.5);
+            color: #d1ecf1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .danger-zone {
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .danger-zone h3 {
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to CineShelf</a>
+    
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🛠️ CineShelf Admin Panel</h1>
+            <p>Master control panel for managing users, settings, and system configuration</p>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="admin-grid">
+            <!-- User Management Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    👥 User Management
+                </div>
+                
+                <div class="form-group">
+                    <label>Current Users</label>
+                    <div id="usersList" class="user-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="newUsername">Add New User</label>
+                    <input type="text" id="newUsername" class="form-control" placeholder="Enter username">
+                </div>
+                <button onclick="addUser()" class="btn btn-primary">Add User</button>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="adminUserSelect">Promote to Admin</label>
+                    <select id="adminUserSelect" class="form-control">
+                        <option value="">Select user to promote...</option>
+                    </select>
+                </div>
+                <button onclick="promoteToAdmin()" class="btn btn-success">Promote to Admin</button>
+            </div>
+
+            <!-- System Statistics Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    📊 System Statistics
+                </div>
+                
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+
+                <button onclick="refreshStats()" class="btn btn-secondary">Refresh Stats</button>
+                <button onclick="exportAllData()" class="btn btn-primary">Export All User Data</button>
+            </div>
+
+            <!-- Admin Role Management Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    👑 Admin Role Management
+                </div>
+                
+                <div class="form-group">
+                    <label>Current Admins</label>
+                    <div id="adminsList" class="user-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="removeAdminSelect">Remove Admin Rights</label>
+                    <select id="removeAdminSelect" class="form-control">
+                        <option value="">Select admin to demote...</option>
+                    </select>
+                </div>
+                <button onclick="removeAdminRights()" class="btn btn-warning">Remove Admin Rights</button>
+            </div>
+
+            <!-- Server Management Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    ☁️ Server Management
+                </div>
+                
+                <div class="form-group">
+                    <label>Backup All Users</label>
+                    <button onclick="backupAllUsers()" class="btn btn-success">Backup All to Server</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Server Status</label>
+                    <div id="serverStatus" class="status-message status-info">
+                        Server connection status unknown
+                    </div>
+                </div>
+
+                <button onclick="testServerConnection()" class="btn btn-secondary">Test Server Connection</button>
+                <button onclick="listServerBackups()" class="btn btn-primary">List Server Backups</button>
+            </div>
+
+            <!-- Master Settings Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    ⚙️ Master Settings
+                </div>
+                
+                <div class="form-group">
+                    <label for="masterApiKey">Master TMDB API Key</label>
+                    <input type="password" id="masterApiKey" class="form-control" placeholder="Set global API key">
+                </div>
+                
+                <div class="form-group">
+                    <label for="appVersion">App Version</label>
+                    <input type="text" id="appVersion" class="form-control" placeholder="Version number" readonly>
+                </div>
+
+                <button onclick="saveGlobalSettings()" class="btn btn-success">Save Global Settings</button>
+                <button onclick="resetAllSettings()" class="btn btn-warning">Reset All User Settings</button>
+            </div>
+
+            <!-- System Maintenance Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    🔧 System Maintenance
+                </div>
+                
+                <div class="form-group">
+                    <button onclick="cleanupOrphanedData()" class="btn btn-secondary">Cleanup Orphaned Data</button>
+                    <button onclick="optimizeLocalStorage()" class="btn btn-secondary">Optimize Storage</button>
+                </div>
+
+                <div class="form-group">
+                    <button onclick="generateSystemReport()" class="btn btn-primary">Generate System Report</button>
+                </div>
+
+                <div class="danger-zone">
+                    <h3>⚠️ Danger Zone</h3>
+                    <p>These actions cannot be undone and will affect all users!</p>
+                    <button onclick="clearAllUserData()" class="btn btn-danger">Clear ALL User Data</button>
+                    <button onclick="resetToFactory()" class="btn btn-danger">Factory Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let users = [];
+        let adminUsers = [];
+        let systemStats = {};
+
+        // Initialize admin panel
+        function init() {
+            loadSystemData();
+            refreshStats();
+            updateUserLists();
+            loadGlobalSettings();
+            showStatus('Admin panel loaded successfully', 'success');
+        }
+
+        // Load system data from localStorage
+        function loadSystemData() {
+            try {
+                users = JSON.parse(localStorage.getItem('cineshelf_users') || '["default"]');
+                adminUsers = JSON.parse(localStorage.getItem('cineshelf-admin-users') || '["admin"]');
+            } catch (error) {
+                console.error('Error loading system data:', error);
+                users = ['default'];
+                adminUsers = ['admin'];
+            }
+        }
+
+        // Save system data to localStorage
+        function saveSystemData() {
+            try {
+                localStorage.setItem('cineshelf_users', JSON.stringify(users));
+                localStorage.setItem('cineshelf-admin-users', JSON.stringify(adminUsers));
+            } catch (error) {
+                showStatus('Error saving system data: ' + error.message, 'error');
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+            setTimeout(() => {
+                statusEl.innerHTML = '';
+            }, 5000);
+        }
+
+        // Add new user
+        function addUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            
+            if (!username) {
+                showStatus('Please enter a username', 'error');
+                return;
+            }
+
+            if (users.includes(username)) {
+                showStatus('User already exists', 'error');
+                return;
+            }
+
+            users.push(username);
+            saveSystemData();
+            updateUserLists();
+            document.getElementById('newUsername').value = '';
+            showStatus(`User "${username}" added successfully`, 'success');
+        }
+
+        // Promote user to admin
+        function promoteToAdmin() {
+            const username = document.getElementById('adminUserSelect').value;
+            
+            if (!username) {
+                showStatus('Please select a user to promote', 'error');
+                return;
+            }
+
+            if (adminUsers.includes(username)) {
+                showStatus('User is already an admin', 'error');
+                return;
+            }
+
+            adminUsers.push(username);
+            saveSystemData();
+            updateUserLists();
+            showStatus(`"${username}" promoted to admin`, 'success');
+        }
+
+        // Remove admin rights
+        function removeAdminRights() {
+            const username = document.getElementById('removeAdminSelect').value;
+            
+            if (!username) {
+                showStatus('Please select an admin to demote', 'error');
+                return;
+            }
+
+            if (adminUsers.length <= 1) {
+                showStatus('Cannot remove the last admin', 'error');
+                return;
+            }
+
+            adminUsers = adminUsers.filter(admin => admin !== username);
+            saveSystemData();
+            updateUserLists();
+            showStatus(`Admin rights removed from "${username}"`, 'success');
+        }
+
+        // Update user lists
+        function updateUserLists() {
+            updateUsersList();
+            updateAdminsList();
+            updateDropdowns();
+        }
+
+        function updateUsersList() {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            users.forEach(user => {
+                const isAdmin = adminUsers.includes(user);
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${user}</div>
+                        <div class="user-role">${isAdmin ? 'Administrator' : 'Regular User'}</div>
+                    </div>
+                    ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                    ${user !== 'default' ? `<button onclick="deleteUser('${user}')" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Delete</button>` : ''}
+                `;
+                usersList.appendChild(userItem);
+            });
+        }
+
+        function updateAdminsList() {
+            const adminsList = document.getElementById('adminsList');
+            adminsList.innerHTML = '';
+
+            adminUsers.forEach(admin => {
+                const adminItem = document.createElement('div');
+                adminItem.className = 'user-item';
+                adminItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${admin}</div>
+                        <div class="user-role">System Administrator</div>
+                    </div>
+                    <span class="admin-badge">ADMIN</span>
+                `;
+                adminsList.appendChild(adminItem);
+            });
+        }
+
+        function updateDropdowns() {
+            // Update promote dropdown
+            const adminSelect = document.getElementById('adminUserSelect');
+            adminSelect.innerHTML = '<option value="">Select user to promote...</option>';
+            users.filter(user => !adminUsers.includes(user)).forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                adminSelect.appendChild(option);
+            });
+
+            // Update demote dropdown
+            const removeSelect = document.getElementById('removeAdminSelect');
+            removeSelect.innerHTML = '<option value="">Select admin to demote...</option>';
+            adminUsers.forEach(admin => {
+                const option = document.createElement('option');
+                option.value = admin;
+                option.textContent = admin;
+                removeSelect.appendChild(option);
+            });
+        }
+
+        // Delete user
+        function deleteUser(username) {
+            if (!confirm(`Are you sure you want to delete user "${username}" and all their data?`)) {
+                return;
+            }
+
+            // Remove from users array
+            users = users.filter(user => user !== username);
+            
+            // Remove from admins if they are one
+            adminUsers = adminUsers.filter(admin => admin !== username);
+            
+            // Clean up their localStorage data
+            localStorage.removeItem(`cineshelf_copies_${username}`);
+            localStorage.removeItem(`cineshelf_movies_${username}`);
+            localStorage.removeItem(`cineshelf_last_backup_${username}`);
+            localStorage.removeItem(`cineshelf_safety_backup_${username}`);
+            
+            saveSystemData();
+            updateUserLists();
+            refreshStats();
+            showStatus(`User "${username}" and all their data deleted`, 'success');
+        }
+
+        // Refresh system statistics
+        function refreshStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            let totalCopies = 0;
+            let totalMovies = 0;
+            let totalUsers = users.length;
+            let totalAdmins = adminUsers.length;
+
+            // Count data for all users
+            users.forEach(user => {
+                const userCopies = JSON.parse(localStorage.getItem(`cineshelf_copies_${user}`) || '[]');
+                const userMovies = JSON.parse(localStorage.getItem(`cineshelf_movies_${user}`) || '[]');
+                totalCopies += userCopies.length;
+                totalMovies += userMovies.length;
+            });
+
+            const storageUsed = Object.keys(localStorage).reduce((total, key) => {
+                if (key.startsWith('cineshelf')) {
+                    return total + localStorage.getItem(key).length;
+                }
+                return total;
+            }, 0);
+
+            const stats = [
+                { number: totalUsers, label: 'Total Users' },
+                { number: totalAdmins, label: 'Admins' },
+                { number: totalCopies, label: 'Total Items' },
+                { number: totalMovies, label: 'Movie Records' },
+                { number: Math.round(storageUsed / 1024), label: 'Storage (KB)' }
+            ];
+
+            statsGrid.innerHTML = '';
+            stats.forEach(stat => {
+                const statItem = document.createElement('div');
+                statItem.className = 'stat-item';
+                statItem.innerHTML = `
+                    <span class="stat-number">${stat.number}</span>
+                    <span class="stat-label">${stat.label}</span>
+                `;
+                statsGrid.appendChild(statItem);
+            });
+        }
+
+        // Export all user data
+        function exportAllData() {
+            const allData = {
+                users: users,
+                adminUsers: adminUsers,
+                timestamp: new Date().toISOString(),
+                userData: {}
+            };
+
+            users.forEach(user => {
+                allData.userData[user] = {
+                    copies: JSON.parse(localStorage.getItem(`cineshelf_copies_${user}`) || '[]'),
+                    movies: JSON.parse(localStorage.getItem(`cineshelf_movies_${user}`) || '[]')
+                };
+            });
+
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cineshelf-complete-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showStatus('Complete system backup exported successfully', 'success');
+        }
+
+        // Load global settings
+        function loadGlobalSettings() {
+            const globalSettings = JSON.parse(localStorage.getItem('cineshelf_global_settings') || '{}');
+            document.getElementById('masterApiKey').value = globalSettings.masterApiKey || '';
+            
+            // Try to get version from service worker
+            fetch('cineshelf-sw.js')
+                .then(response => response.text())
+                .then(content => {
+                    const versionMatch = content.match(/CACHE_VERSION\s*=\s*['"`]([^'"`]+)['"`]/);
+                    document.getElementById('appVersion').value = versionMatch ? versionMatch[1] : 'Unknown';
+                })
+                .catch(() => {
+                    document.getElementById('appVersion').value = 'Unknown';
+                });
+        }
+
+        // Save global settings
+        function saveGlobalSettings() {
+            const globalSettings = {
+                masterApiKey: document.getElementById('masterApiKey').value,
+                lastUpdated: new Date().toISOString()
+            };
+
+            localStorage.setItem('cineshelf_global_settings', JSON.stringify(globalSettings));
+            showStatus('Global settings saved successfully', 'success');
+        }
+
+        // Test server connection
+        function testServerConnection() {
+            const statusEl = document.getElementById('serverStatus');
+            statusEl.innerHTML = 'Testing server connection...';
+            statusEl.className = 'status-message status-info';
+
+            fetch('backup.php', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        statusEl.innerHTML = 'Server connection successful';
+                        statusEl.className = 'status-message status-success';
+                    } else {
+                        throw new Error('Server responded with error');
+                    }
+                })
+                .catch(error => {
+                    statusEl.innerHTML = 'Server connection failed - backup.php not found';
+                    statusEl.className = 'status-message status-error';
+                });
+        }
+
+        // Cleanup orphaned data
+        function cleanupOrphanedData() {
+            let cleaned = 0;
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('cineshelf_copies_') || key.startsWith('cineshelf_movies_')) {
+                    const username = key.split('_').pop();
+                    if (!users.includes(username)) {
+                        localStorage.removeItem(key);
+                        cleaned++;
+                    }
+                }
+            });
+
+            refreshStats();
+            showStatus(`Cleaned up ${cleaned} orphaned data entries`, 'success');
+        }
+
+        // Reset all user settings
+        function resetAllSettings() {
+            if (!confirm('This will reset ALL user settings to defaults. Continue?')) {
+                return;
+            }
+
+            users.forEach(user => {
+                localStorage.removeItem(`cineshelf_settings_${user}`);
+            });
+            localStorage.removeItem('cineshelf_settings');
+            
+            showStatus('All user settings reset to defaults', 'success');
+        }
+
+        // Clear all user data (danger zone)
+        function clearAllUserData() {
+            const confirmation = prompt('Type "DELETE ALL DATA" to confirm this action:');
+            if (confirmation !== 'DELETE ALL DATA') {
+                showStatus('Action cancelled', 'info');
+                return;
+            }
+
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('cineshelf')) {
+                    localStorage.removeItem(key);
+                }
+            });
+
+            // Reset to defaults
+            users = ['default'];
+            adminUsers = ['admin'];
+            saveSystemData();
+            updateUserLists();
+            refreshStats();
+            
+            showStatus('ALL user data has been permanently deleted', 'error');
+        }
+
+        // Factory reset
+        function resetToFactory() {
+            const confirmation = prompt('Type "FACTORY RESET" to completely reset CineShelf:');
+            if (confirmation !== 'FACTORY RESET') {
+                showStatus('Action cancelled', 'info');
+                return;
+            }
+
+            localStorage.clear();
+            showStatus('Factory reset complete - page will reload', 'success');
+            setTimeout(() => location.reload(), 2000);
+        }
+
+        // Generate system report
+        function generateSystemReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                system: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language
+                },
+                users: users,
+                adminUsers: adminUsers,
+                statistics: {},
+                storageAnalysis: {}
+            };
+
+            // Add detailed statistics
+            users.forEach(user => {
+                const userCopies = JSON.parse(localStorage.getItem(`cineshelf_copies_${user}`) || '[]');
+                const userMovies = JSON.parse(localStorage.getItem(`cineshelf_movies_${user}`) || '[]');
+                
+                report.statistics[user] = {
+                    copies: userCopies.length,
+                    movies: userMovies.length,
+                    resolved: userCopies.filter(c => c.resolved).length,
+                    collections: userCopies.filter(c => !c.isWishlist).length,
+                    wishlists: userCopies.filter(c => c.isWishlist).length
+                };
+            });
+
+            // Storage analysis
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('cineshelf')) {
+                    report.storageAnalysis[key] = {
+                        size: localStorage.getItem(key).length,
+                        sizeKB: Math.round(localStorage.getItem(key).length / 1024)
+                    };
+                }
+            });
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cineshelf-system-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showStatus('System report generated and downloaded', 'success');
+        }
+
+        // Backup all users to server
+        function backupAllUsers() {
+            // This would implement server backup for all users
+            showStatus('Server backup functionality requires server-side implementation', 'info');
+        }
+
+        // List server backups
+        function listServerBackups() {
+            // This would list all backups on the server
+            showStatus('Server backup listing requires server-side implementation', 'info');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
